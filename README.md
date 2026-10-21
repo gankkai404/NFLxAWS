@@ -16,7 +16,7 @@ Des outils pros comme Teamworks Coaching ou Catapult Thunder analysent les tenda
 
 NFL Big Data Bowl : tracking Next Gen Stats (10 Hz) et scouting PFF, 122 matchs des semaines 1 à 8 de la saison 2021, jeux de passe uniquement. Les placer dans `data/raw/` (pour l'instant elles sont dans `data/` : lancer les commandes avec `--raw data`). Les données brutes ne sont pas versionnées (`data/raw/` est dans le `.gitignore`).
 
-## Structure du repo
+## Structure du repo.venv/bin/streamlit run app.py --server.port 8506 --server.headless true
 
 ```
 data/raw/            # données brutes Big Data Bowl (non versionnées)
@@ -74,7 +74,7 @@ Export d'une action en HTML : `python -m src.replay --game 2021090900 --play 227
 
 - Partie 1 « Données & métrique » : Thibault
 - Partie 2 « Replay animé » : Nicolas — replay 2D Plotly (`src/replay/`), branché sur `blocks.csv`
-- Partie 3 « App & pitch » : *à compléter*
+- Partie 3 « App & pitch » : Daniel
 
 ## Planning du hackathon
 
