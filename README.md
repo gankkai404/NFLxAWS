@@ -1,205 +1,69 @@
-# 🏈 Weak Link - Hackathon NFL Big Data Bowl
+# Weak Link — trouver le maillon faible de la ligne offensive adverse
 
-**Trouver le maillon faible de la ligne offensive adverse**
+Un écran pour savoir quel bloqueur adverse craque, dans quelles situations, avec le replay animé qui le prouve.
 
-## 🎯 Concept
+## Problème et positionnement
 
-Un outil qui montre à un coach, en un écran, quel bloqueur adverse craque, dans quelles situations, avec les replays animés comme preuve.
+Des outils pros comme Teamworks Coaching ou Catapult Thunder analysent les tendances adverses de façon générique (formations, appels, vidéo). Weak Link se concentre sur un seul sujet : la protection de passe, duel par duel. Grâce au tracking des joueurs, on mesure pour chaque bloqueur s'il laisse son défenseur atteindre le quarterback, et à quel moment.
 
-## 📁 Structure du Projet
+## Fonctionnalités du MVP
+
+- Classement des bloqueurs d'une équipe, du plus faible au plus solide.
+- Filtres de situation : 3e down, blitz, stunt, play action.
+- Replay animé des duels perdus.
+
+## Données
+
+NFL Big Data Bowl : tracking Next Gen Stats (10 Hz) et scouting PFF, 122 matchs des semaines 1 à 8 de la saison 2021, jeux de passe uniquement. Les placer dans `data/raw/` (pour l'instant elles sont dans `data/` : lancer les commandes avec `--raw data`). Les données brutes ne sont pas versionnées (`data/raw/` est dans le `.gitignore`).
+
+## Structure du repo
 
 ```
-NFLxAWS/
-├── data/
-│   ├── raw/              # CSV Big Data Bowl (tracking, plays, pff, players, games)
-│   └── processed/        # Sorties de la partie 1 (blocks.csv)
-├── src/
-│   ├── metrics.py        # PARTIE 1 : Calcul du temps tenu
-│   ├── replay.py         # PARTIE 2 : Replay animé ✅ FAIT
-│   └── __init__.py
-├── app.py                # PARTIE 3 : Application Streamlit
-├── requirements.txt
-└── README.md
+data/raw/            # données brutes Big Data Bowl (non versionnées)
+data/processed/      # blocks.csv, une ligne par duel (non versionné, à régénérer)
+src/metrics.py       # Partie 1 : calcul des duels et de la métrique (CLI + API)
+src/replay.py        # Partie 2 : replay animé Plotly d'une action
+app.py               # Partie 3 : application Streamlit
+docs/                # documentation de la métrique (metriques.md)
+tests/               # tests unitaires pytest
 ```
 
-## 🚀 Répartition des Tâches
-
-### ✅ Partie 2 : Replay animé (COMPLÉTÉ)
-
-**Fichier** : `src/replay.py`
-
-**Fonction principale** :
-```python
-from src.replay import make_replay
-
-# Replay simple
-fig = make_replay(game_id=2021090900, play_id=97)
-
-# Avec focus sur un bloqueur
-fig = make_replay(game_id=2021090900, play_id=97, focus_blocker_id=12345)
-
-# Afficher dans Streamlit
-import streamlit as st
-st.plotly_chart(fig, use_container_width=True)
-
-# Ou sauvegarder en HTML
-fig.write_html("replay.html")
-```
-
-**Fonctionnalités** :
-- ✅ Terrain NFL 120×53.3 yards avec marquages
-- ✅ Retournement automatique si `playDirection == "left"`
-- ✅ Animation frame par frame avec contrôles Play/Pause
-- ✅ QB surligné en étoile dorée
-- ✅ Bloqueur et défenseur en focus si `focus_blocker_id` fourni
-- ✅ Ligne défenseur→QB qui passe au rouge sous 2 yards
-- ✅ Hover avec nom, numéro, vitesse
-
-### ⏳ Partie 1 : Data & Métrique (À faire par vos coéquipiers)
-
-**Fichier** : `src/metrics.py`
-
-**Mission** : Calculer le "temps tenu" de chaque bloqueur sur chaque action.
-
-**Livrable** : `data/processed/blocks.csv` avec colonnes :
-```
-gameId, playId, blockerId, blockerName, blockerPos, team,
-defenderId, defenderName, temps_tenu, perdu (bool),
-pressure_allowed, sack_allowed, down, yardsToGo,
-nb_rushers, stunt, pff_playAction, offenseFormation,
-passResult, playDescription
-```
-
-**Calcul du temps tenu** :
-1. Repérer le snap (`ball_snap`)
-2. Repérer la fin (`pass_forward`, `qb_sack`, etc.)
-3. Pour chaque bloqueur, distance défenseur↔QB par frame
-4. Temps tenu = (frame où distance < 2 yards - frame snap) / 10
-5. Si jamais atteint, temps = fin - snap
-
-### ⏳ Partie 3 : App & Pitch (À faire par vos coéquipiers)
-
-**Fichier** : `app.py`
-
-**Mission** : Interface Streamlit pour le coach.
-
-**Fonctionnalités** :
-- Sidebar : équipe adverse, filtres (3e down, blitz, stunt, play action)
-- Classement des bloqueurs : temps tenu moyen, % duels perdus, pressions
-- Clic sur joueur → liste de duels perdus → replay avec `make_replay()`
-- Cache avec `@st.cache_data`
-
-## 🔧 Installation
+## Installation
 
 ```bash
-# Activer l'environnement virtuel
-source .venv/bin/activate
-
-# Installer les dépendances
+python -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 🧪 Tester le Replay
+## Utilisation
 
 ```bash
-# Test rapide
-python test_replay.py
-
-# Ouvrir les fichiers HTML générés dans un navigateur
+python -m src.metrics     # génère data/processed/blocks.csv (ajouter --raw data tant que les données sont dans data/)
+streamlit run app.py      # lance l'application
+pytest -q                 # lance les tests
 ```
 
-## 📊 Données
+## Contrats entre les parties
 
-### Fichiers Utilisés par le Replay
+- `data/processed/blocks.csv` : une ligne par duel. Colonnes clés : `gameId`, `playId`, `blockerId`, `blockerName`, `blockerPos`, `team`, `defenderId`, `defenderName`, `temps_tenu`, `perdu`, `pressure_allowed`, `sack_allowed`, `down`, `yardsToGo`, `nb_rushers`, `stunt`, `pff_playAction`, `offenseFormation`, `passResult`, `playDescription`, plus `frame_perdu` pour le replay. Dictionnaire complet : [docs/metriques.md](docs/metriques.md).
+- Replay : `make_replay(game_id, play_id, focus_blocker_id=None) -> plotly.graph_objects.Figure` dans `src/replay.py`.
+- L'app importe `load_blocks` et `summarize_blockers` depuis `src.metrics`.
 
-| Fichier | Colonnes Utilisées |
-|---------|-------------------|
-| `tracking_*.csv` | gameId, playId, nflId, frameId, x, y, s, team, jerseyNumber, playDirection |
-| `plays.csv` | gameId, playId, playDescription, quarter, down, yardsToGo, passResult, possessionTeam |
-| `pffScoutingData.csv` | gameId, playId, nflId, pff_role, pff_nflIdBlockedPlayer |
-| `players.csv` | nflId, displayName, officialPosition |
+## Équipe
 
-### Logique du Retournement
+- Partie 1 « Données & métrique » : Thibault
+- Partie 2 « Replay animé » : *à compléter*
+- Partie 3 « App & pitch » : *à compléter*
 
-Si `playDirection == "left"`, les coordonnées sont retournées :
-```python
-x → 120 - x
-y → 53.3 - y
-```
-L'attaque va toujours vers la droite dans le replay.
+## Planning du hackathon
 
-## 🎨 Couleurs et Symboles
+- 1:00 : synchro, chaque partie montre sa base
+- 2:00 : intégration
+- 2:30 : gel du code
 
-- **QB** : ⭐ Étoile dorée
-- **Bloqueur focus** : 💎 Diamant vert
-- **Défenseur focus** : 🟧 Carré orange
-- **Attaque** : 🔵 Bleu
-- **Défense** : 🔴 Rouge
-- **Ballon** : 🟤 Marron
-- **Ligne défenseur→QB** : 🟢 Verte (safe) / 🔴 Rouge (< 2 yards)
+## Limites connues
 
-## 🔗 Intégration avec les Autres Parties
-
-### Depuis la Partie 1 (metrics.py)
-```python
-# Après avoir calculé blocks.csv, utiliser le replay :
-from src.replay import make_replay
-
-# Afficher les actions perdues d'un bloqueur
-lost_blocks = blocks_df[
-    (blocks_df['blockerId'] == blocker_id) & 
-    (blocks_df['perdu'] == True)
-]
-
-for _, block in lost_blocks.iterrows():
-    fig = make_replay(
-        game_id=block['gameId'],
-        play_id=block['playId'],
-        focus_blocker_id=blocker_id
-    )
-    # Sauvegarder ou afficher
-```
-
-### Depuis la Partie 3 (app.py)
-```python
-import streamlit as st
-from src.replay import make_replay
-
-# Dans l'app Streamlit :
-if st.button("Voir le replay"):
-    fig = make_replay(game_id, play_id, focus_blocker_id)
-    st.plotly_chart(fig, use_container_width=True)
-```
-
-## 📝 Notes Techniques
-
-### Seuil de Pression
-`PRESSURE_THRESHOLD = 2` yards (modifiable dans `replay.py`)
-
-### Performance
-- Cache possible avec `@st.cache_data` sur `make_replay()`
-- Commencer avec 2-3 matchs pour tester
-
-### Limitation
-- 8 semaines de données seulement
-- Tracking à 10 Hz (10 frames/seconde)
-- Le seuil de 2 yards est une convention
-
-## 🎯 Points de Synchro
-
-- **1:00** : Chacun montre son livrable de base
-- **2:00** : Intégration des 3 parties
-- **2:30** : Code gelé, focus sur le pitch
-
-## 📞 Contact
-
-**Partie 2 (Replay)** : ✅ Complétée et prête à l'emploi
-
-Pour questions sur le replay :
-- Voir `src/replay.py` (tout documenté)
-- Tester avec `test_replay.py`
-- Les fonctions sont prêtes pour l'intégration
-
----
-
-**Bon hackathon !** 🏆
+- Les passes rapides gonflent le temps tenu (censure) : comparer les bloqueurs sur `taux_perdu`.
+- Le seuil de 2 yards est une convention, et un QB qui se déplace vers un défenseur peut faire « perdre » un duel.
+- Un seul défenseur par duel (le premier bloqué selon PFF), sur 8 semaines : petit échantillon par joueur.
+- Jeux de passe uniquement.
