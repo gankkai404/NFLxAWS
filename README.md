@@ -22,7 +22,12 @@ NFL Big Data Bowl : tracking Next Gen Stats (10 Hz) et scouting PFF, 122 matchs 
 data/raw/            # données brutes Big Data Bowl (non versionnées)
 data/processed/      # blocks.csv, une ligne par duel (non versionné, à régénérer)
 src/metrics.py       # Partie 1 : calcul des duels et de la métrique (CLI + API)
-src/replay.py        # Partie 2 : replay animé Plotly d'une action
+src/replay/          # Partie 2 : replay animé 2D Plotly d'une action
+  ├── data.py        #   prépare une action (positions, duels, frames snap/pression/fin)
+  ├── plotly2d.py    #   make_replay(...) -> go.Figure
+  ├── teams.py       #   couleurs des 32 équipes NFL
+  ├── demo_app.py    #   page Streamlit de démo (branchée sur blocks.csv)
+  └── __main__.py    #   CLI : python -m src.replay --game ... --play ...
 app.py               # Partie 3 : application Streamlit
 docs/                # documentation de la métrique (metriques.md)
 tests/               # tests unitaires pytest
@@ -46,13 +51,29 @@ pytest -q                 # lance les tests
 ## Contrats entre les parties
 
 - `data/processed/blocks.csv` : une ligne par duel. Colonnes clés : `gameId`, `playId`, `blockerId`, `blockerName`, `blockerPos`, `team`, `defenderId`, `defenderName`, `temps_tenu`, `perdu`, `pressure_allowed`, `sack_allowed`, `down`, `yardsToGo`, `nb_rushers`, `stunt`, `pff_playAction`, `offenseFormation`, `passResult`, `playDescription`, plus `frame_perdu` pour le replay. Dictionnaire complet : [docs/metriques.md](docs/metriques.md).
-- Replay : `make_replay(game_id, play_id, focus_blocker_id=None) -> plotly.graph_objects.Figure` dans `src/replay.py`.
-- L'app importe `load_blocks` et `summarize_blockers` depuis `src.metrics`.
+- Replay : `from src.replay import make_replay` ; `make_replay(game_id, play_id, focus_blocker_id=None) -> plotly.graph_objects.Figure`. `focus_blocker_id` est le `blockerId` d'une ligne de `blocks.csv` : le replay surligne ce bloqueur, son défenseur et la ligne défenseur → QB. Le replay recalcule les positions depuis les CSV bruts, avec le même temps tenu que `metrics.py` (vérifié).
+- L'app importe `load_blocks` et `summarize_blockers` depuis `src.metrics`, et `make_replay` depuis `src.replay`.
+
+### Brancher le replay dans l'app (Partie 3)
+
+```python
+from src.metrics import load_blocks, summarize_blockers
+from src.replay import make_replay
+import streamlit as st
+
+blocks = load_blocks()
+ranking = summarize_blockers(blocks[blocks.team == "DAL"], min_duels=10)   # maillon faible en tête
+# ... l'utilisateur choisit un bloqueur puis une de ses actions perdues ...
+st.plotly_chart(make_replay(game_id, play_id, focus_blocker_id=blocker_id), use_container_width=True)
+```
+
+Démo autonome du replay : `streamlit run src/replay/demo_app.py`
+Export d'une action en HTML : `python -m src.replay --game 2021090900 --play 2279 --blocker 37082 --open`
 
 ## Équipe
 
 - Partie 1 « Données & métrique » : Thibault
-- Partie 2 « Replay animé » : *à compléter*
+- Partie 2 « Replay animé » : Nicolas — replay 2D Plotly (`src/replay/`), branché sur `blocks.csv`
 - Partie 3 « App & pitch » : *à compléter*
 
 ## Planning du hackathon
