@@ -1,0 +1,7 @@
+data/raw/
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+.DS_Store
+data/processed/
