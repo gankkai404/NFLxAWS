@@ -1,0 +1,56 @@
+[server]
+enableStaticServing = true
+
+[browser]
+gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"
+showSidebarNavigation = false
+
+[runner]
+magicEnabled = false
+
+[theme]
+base = "light"
+primaryColor = "#D7301F"
+backgroundColor = "#F3F0E8"
+secondaryBackgroundColor = "#EAE5D9"
+textColor = "#16140F"
+linkColor = "#B3261A"
+borderColor = "#D6CFBF"
+baseRadius = "3px"
+buttonRadius = "3px"
+baseFontSize = 16
+redColor = "#D7301F"
+greenColor = "#2F7D45"
+yellowColor = "#C99A14"
+grayColor = "#8C8577"
+
+font = "WL Archivo, system-ui, sans-serif"
+headingFont = "WL Archivo, system-ui, sans-serif"
+codeFont = "WL Mono, ui-monospace, monospace"
+
+[[theme.fontFaces]]
+family = "WL Archivo"
+url = "app/static/fonts/Archivo-Variable-latin.woff2"
+weight = "100 900"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "WL Mono"
+url = "app/static/fonts/IBMPlexMono-400-latin.woff2"
+weight = "400"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "WL Mono"
+url = "app/static/fonts/IBMPlexMono-500-latin.woff2"
+weight = "500"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "WL Mono"
+url = "app/static/fonts/IBMPlexMono-600-latin.woff2"
+weight = "600 700"
+style = "normal"
